@@ -37,15 +37,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [12.x]
-
     steps:
     - name: deploy
-    - uses: actions/checkout@v1
-
-    - uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v1
       with:
         name: dist
 
