@@ -30,24 +30,58 @@ jobs:
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    - name: Upload artifact
+    - name: Upload versioned artifact
       uses: actions/upload-artifact@v1
       with:
         name: dist-${{ steps.get_version.outputs.VERSION }}
         path: build/
+    - name: Upload unversioned artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: build
+        path: build/
 
+  copys3:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: build
+
+    - name: Deploy to S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws s3 cp \
+        --recursive \
+        --acl public-read \
+        --region ap-southeast-2 \
+        ./build s3://example
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Get the version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    - name: deploy
+    - name: download artifact
       uses: actions/download-artifact@v1
       with:
-        name: dist-${{ steps.get_version.outputs.VERSION }}
+        name: build
 
-    - run: ls dist-${{ steps.get_version.outputs.VERSION }}
+    - name: Deploy to Production
+      id: deploy
+      uses: Pendect/action-rsyncer@v1.1.0
+      env:
+        DEPLOY_KEY: ${{secrets.DEPLOY_KEY}}
+      with:
+        flags: '-avzr --delete'
+        options: ''
+        ssh_options: ''
+        src: 'build/'
+        dest: 'nick@app.limos.com:~/prod-limos'
+    - name: Display status from deploy
+      run: echo "${{ steps.deploy.outputs.status }}"
