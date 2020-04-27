@@ -42,6 +42,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: deploy
       uses: actions/download-artifact@v1
       with:
