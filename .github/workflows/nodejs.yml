@@ -46,10 +46,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: download artifact
       uses: actions/download-artifact@v1
       with:
-        name: build
+        name: dist-${{ steps.get_version.outputs.VERSION }}
 
     - name: Deploy to S3
       env:
@@ -60,7 +63,7 @@ jobs:
         --recursive \
         --acl public-read \
         --region ap-southeast-2 \
-        ./build s3://example
+        ./build s3://example/dist-${{ steps.get_version.outputs.VERSION }}
 
   deploy:
     needs: build
