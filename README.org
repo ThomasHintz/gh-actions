@@ -1,0 +1,10 @@
+* Title
+
+stuff I'm writing here I want to see what happens if I write this in org
+mode.
+
+** subtitle
+
+[[https://thomashintz.org][thomashintz.org]]
+
+does a link work?
